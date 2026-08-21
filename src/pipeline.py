@@ -176,7 +176,13 @@ class CompanyIntelligencePipeline:
 
         # 6. Optional Wikipedia Enrichment
         yield {"type": "log", "level": "INFO", "msg": "📚 Phase 6: Supplementary Wikipedia Enrichment..."}
-        brand = company_data.brand_name or company_data.company_name or start_url
+        # Prefer legal_name (most accurate after CH enrichment) over raw page title
+        brand = (
+            company_data.legal_name
+            or company_data.brand_name
+            or company_data.company_name
+            or start_url
+        )
         wiki_data = await get_wikipedia_company_data(brand, start_url)
         if wiki_data:
             yield {"type": "wiki_json", "content": wiki_data}
