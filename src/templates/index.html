@@ -124,14 +124,8 @@
                         <span id="card-contact" class="font-mono text-[11px] text-slate-300 truncate block mt-0.5">—</span>
                     </div>
                 </div>
-                <div class="pt-0.5">
-                    <button id="official-enrich-btn" class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-800 to-teal-800 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs uppercase tracking-wider py-2 px-3 rounded border border-emerald-500/30 shadow-lg transition-all active:scale-95">
-                        <span>🇬🇧</span>
-                        <span id="enrich-btn-text">VIEW OFFICIAL UK REGISTRY DATA</span>
-                    </button>
-                    <div id="enrich-status-msg" class="text-[10px] text-center text-slate-500 mt-1 italic">
-                        Click to show verified Companies House data in the right panel
-                    </div>
+                <div id="ch-auto-status" class="pt-0.5 text-[10px] text-center text-slate-500 italic">
+                    🇬🇧 UK companies are verified automatically during crawl
                 </div>
             </div>
         </div>
@@ -212,9 +206,6 @@
         const cardLocation      = document.getElementById('card-location');
         const cardContact       = document.getElementById('card-contact');
         const entityAvatar      = document.getElementById('entity-avatar');
-        const officialEnrichBtn = document.getElementById('official-enrich-btn');
-        const enrichBtnText     = document.getElementById('enrich-btn-text');
-        const enrichStatusMsg   = document.getElementById('enrich-status-msg');
         const jsonViewer        = document.getElementById('json-viewer');
         const wikiViewer        = document.getElementById('wiki-viewer');
         const officialViewer    = document.getElementById('official-viewer');
@@ -396,7 +387,6 @@
             systemStatusText.className = 'tracking-wider uppercase text-[10px] text-indigo-400 font-bold';
             crawlBtn.disabled = true;
             crawlBtn.innerText = 'CRAWLING...';
-            enrichStatusMsg.innerText = 'Click button after crawl to view official registry data';
 
             appendLog('PHASE', `Starting crawl pipeline for: ${domain}`);
             if (eventSource) eventSource.close();
@@ -429,7 +419,7 @@
                             officialData = incoming.official_registry_profile;
                             officialViewer.innerText = JSON.stringify(officialData, null, 2);
                             setRightBadge('REGISTRY READY', 'emerald');
-                            enrichStatusMsg.innerHTML = '<span class="text-emerald-400 font-semibold">✅ Official data ready — click button to view</span>';
+                            appendLog('SUCCESS', '✅ Official UK registry data loaded — see OFFICIAL REGISTRY tab');
                         }
                     }
                     populateEntityCard(incoming);
@@ -476,66 +466,6 @@
                 crawlBtn.innerText = 'CRAWL DOMAIN';
                 eventSource.close();
             };
-        };
-
-        // ── Official Registry Button ──────────────────────────────────────────
-        // If we already have officialData from crawl → just switch tab and show it.
-        // If not → fetch fresh from /enrich endpoint.
-        officialEnrichBtn.onclick = async () => {
-            if (!scrapedData) {
-                alert('Please crawl a domain first.');
-                return;
-            }
-
-            // If already loaded, just switch to that tab
-            if (officialData) {
-                officialViewer.innerText = JSON.stringify(officialData, null, 2);
-                switchTab('official');
-                return;
-            }
-
-            // Otherwise fetch from /enrich
-            officialEnrichBtn.disabled = true;
-            enrichBtnText.innerText = 'QUERYING UK COMPANIES HOUSE...';
-            enrichStatusMsg.innerText = 'Connecting to UK Government Companies House API...';
-            appendLog('PHASE', `Fetching Companies House data...`);
-
-            const name     = scrapedData.legal_name || scrapedData.company_name || '';
-            const regNo    = scrapedData.registration_number || '';
-            const domain   = scrapedData.domain || '';
-            const postcode = scrapedData.postal_code || '';
-            const city     = scrapedData.city || '';
-            const address  = scrapedData.full_address || '';
-
-            try {
-                const url = `/enrich?name=${encodeURIComponent(name)}&reg_no=${encodeURIComponent(regNo)}&domain=${encodeURIComponent(domain)}&postcode=${encodeURIComponent(postcode)}&city=${encodeURIComponent(city)}&address=${encodeURIComponent(address)}`;
-                const resp = await fetch(url);
-                const result = await resp.json();
-
-                if (result.status === 'success') {
-                    officialData = result.normalized || result;
-                    officialViewer.innerText = JSON.stringify(officialData, null, 2);
-                    setRightBadge('VERIFIED REGISTRY', 'emerald');
-                    switchTab('official');
-                    appendLog('SUCCESS', `Companies House: ${result.company_number} — ${result.legal_name}`);
-                    enrichStatusMsg.innerHTML = `<span class="text-emerald-400 font-semibold">✅ ${result.legal_name} (${result.company_number})</span>`;
-                } else if (result.status === 'ambiguous') {
-                    officialViewer.innerText = JSON.stringify(result.resolution, null, 2);
-                    setRightBadge('AMBIGUOUS', 'amber');
-                    switchTab('official');
-                    appendLog('WARN', 'Companies House: multiple candidates, ambiguous match.');
-                    enrichStatusMsg.innerHTML = '<span class="text-amber-400">⚠️ Multiple candidates — see right panel</span>';
-                } else {
-                    appendLog('WARN', `Companies House: ${result.msg || result.status}`);
-                    enrichStatusMsg.innerHTML = `<span class="text-slate-400">${result.msg || 'No matching record found.'}</span>`;
-                }
-            } catch (err) {
-                appendLog('ERROR', `Companies House error: ${err.message}`);
-                enrichStatusMsg.innerText = `Error: ${err.message}`;
-            } finally {
-                officialEnrichBtn.disabled = false;
-                enrichBtnText.innerText = 'VIEW OFFICIAL UK REGISTRY DATA';
-            }
         };
 
         // ── Copy scraped JSON ─────────────────────────────────────────────────
