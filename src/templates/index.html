@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORP INTEL | Entity Intelligence & Due Diligence</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #06090e;
+            color: #d1d5db;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        .console-font {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.80rem;
+            line-height: 1.55;
+        }
+        .custom-scroll::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #090d16;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 2px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+        .glow-btn {
+            box-shadow: 0 0 12px rgba(79, 70, 229, 0.45);
+        }
+        .glow-btn:hover {
+            box-shadow: 0 0 20px rgba(79, 70, 229, 0.7);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col p-3 md:p-4 gap-3 select-none">
+
+    <!-- Top Navbar -->
+    <header class="flex items-center justify-between gap-4 bg-[#0b0f19] border border-[#172033] rounded-lg px-4 py-2.5 shadow-xl">
+        <!-- Left Badge & Title -->
+        <div class="flex items-center gap-2.5">
+            <div class="flex items-center justify-center w-7 h-7 rounded bg-gradient-to-br from-indigo-600 to-violet-700 font-black text-white text-xs shadow-md shadow-indigo-600/40">
+                DD
+            </div>
+            <div class="flex items-center gap-1.5">
+                <span class="font-extrabold text-sm tracking-wider text-white">CORP INTEL</span>
+                <span class="text-[10px] font-bold text-indigo-400 opacity-90 px-1.5 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/20">AI DILIGENCE</span>
+            </div>
+        </div>
+
+        <!-- Center Input Bar -->
+        <div class="flex flex-1 max-w-xl items-center bg-[#05080e] border border-[#1f2d47] rounded-md px-3 py-1.5 focus-within:border-indigo-500 transition-all">
+            <span class="text-xs font-mono text-slate-500 pr-2">https://</span>
+            <input type="text" id="domain-input" value="" placeholder="e.g. brewdog.com or stripe.com"
+                   class="flex-1 bg-transparent border-none text-xs text-slate-100 placeholder-slate-600 focus:outline-none font-mono min-w-0">
+            
+            <!-- Pages Count Selector -->
+            <div class="flex items-center gap-1.5 px-2 py-0.5 mr-2 bg-[#0b0f19] rounded border border-[#1e293b]">
+                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">PAGES:</span>
+                <select id="max-pages-select" class="bg-transparent text-xs font-mono font-bold text-indigo-400 focus:outline-none cursor-pointer">
+                    <option value="5" class="bg-[#0b0f19] text-slate-200">5</option>
+                    <option value="10" selected class="bg-[#0b0f19] text-slate-200">10</option>
+                    <option value="20" class="bg-[#0b0f19] text-slate-200">20</option>
+                    <option value="30" class="bg-[#0b0f19] text-slate-200">30</option>
+                    <option value="50" class="bg-[#0b0f19] text-slate-200">50</option>
+                </select>
+            </div>
+
+            <button id="crawl-btn" class="bg-[#4338ca] hover:bg-[#4f46e5] text-white font-bold text-xs uppercase tracking-wider px-4 py-1.5 rounded border border-indigo-400/40 glow-btn transition-all active:scale-95 whitespace-nowrap">
+                CRAWL DOMAIN
+            </button>
+        </div>
+
+        <!-- Right Status -->
+        <div class="flex items-center gap-2 text-xs font-semibold text-slate-300 pr-2">
+            <span id="system-dot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span id="system-status-text" class="tracking-wider uppercase text-[10px] text-emerald-400 font-bold">SYSTEM READY</span>
+        </div>
+    </header>
+
+    <!-- Top 3-Column Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 min-h-[380px]">
+
+        <!-- Column 1: History & Saved Crawls (2 Cols) -->
+        <div class="lg:col-span-2 flex flex-col bg-[#0b0f19] border border-[#172033] rounded-lg overflow-hidden">
+            <div class="flex items-center justify-between px-3 py-2.5 border-b border-[#172033] bg-[#080c14]">
+                <span class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">HISTORY & SAVED CRAWLS</span>
+                <span id="history-count" class="text-[10px] font-bold text-slate-400">0</span>
+            </div>
+            <div id="history-list" class="flex-1 p-2 space-y-1.5 overflow-y-auto custom-scroll">
+                <div class="p-3 text-center text-xs text-slate-500">No prior crawls saved yet.</div>
+            </div>
+        </div>
+
+        <!-- Column 2: Live Pipeline Console (5.5 Cols) -->
+        <div class="lg:col-span-5 flex flex-col bg-[#0b0f19] border border-[#172033] rounded-lg overflow-hidden">
+            <div class="flex items-center justify-between px-3 py-2.5 border-b border-[#172033] bg-[#080c14]">
+                <span class="text-[10px] font-bold text-slate-200 tracking-wider uppercase">LIVE PIPELINE CONSOLE</span>
+                <span id="sse-badge" class="text-[10px] font-mono font-bold text-emerald-400 tracking-wider">
+                    SSE: READY
+                </span>
+            </div>
+            <div id="console-logs" class="flex-1 p-3 bg-[#05080e] overflow-y-auto console-font custom-scroll text-slate-300 max-h-[360px] min-h-[320px]">
+                <div class="text-slate-500">[00:00:00] INFO Ready to crawl. Enter a domain and click CRAWL DOMAIN to execute pipeline.</div>
+            </div>
+        </div>
+
+        <!-- Column 3: Extracted Entity Intel (4.5 Cols) -->
+        <div class="lg:col-span-5 flex flex-col bg-[#0b0f19] border border-[#172033] rounded-lg overflow-hidden justify-between">
+            <div class="flex items-center justify-between px-3 py-2.5 border-b border-[#172033] bg-[#080c14]">
+                <span class="text-[10px] font-bold text-slate-200 tracking-wider uppercase">EXTRACTED ENTITY INTEL</span>
+                <span id="confidence-badge" class="text-[10px] font-bold text-slate-500 tracking-wider">
+                    CONFIDENCE: —
+                </span>
+            </div>
+
+            <div class="p-3.5 flex-1 flex flex-col justify-between space-y-3">
+                <!-- Entity Top Card -->
+                <div class="flex items-start gap-3 bg-[#080c14] p-3 rounded border border-[#172033]">
+                    <div id="entity-avatar" class="flex items-center justify-center w-8 h-8 rounded bg-[#151d30] border border-[#22304d] text-indigo-400 font-bold text-sm">
+                        —
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 id="card-company-name" class="font-bold text-sm text-white">—</h3>
+                        <p id="card-desc" class="text-[11px] text-slate-400 line-clamp-2 mt-0.5 leading-relaxed">
+                            No company data loaded. Crawl a domain to populate verified company identity.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Structured Grid Stats -->
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="bg-[#080c14] p-2 rounded border border-[#172033]">
+                        <span class="text-[9px] font-bold tracking-wider text-slate-500 uppercase block">LEGAL NAME</span>
+                        <span id="card-legal-name" class="font-mono text-[11px] text-slate-300 truncate block mt-0.5">—</span>
+                    </div>
+                    <div class="bg-[#080c14] p-2 rounded border border-[#172033]">
+                        <span class="text-[9px] font-bold tracking-wider text-slate-500 uppercase block">COMPANY NUMBER</span>
+                        <span id="card-reg-no" class="font-mono text-[11px] text-slate-300 truncate block mt-0.5">—</span>
+                    </div>
+                    <div class="bg-[#080c14] p-2 rounded border border-[#172033]">
+                        <span class="text-[9px] font-bold tracking-wider text-slate-500 uppercase block">VAT NUMBER</span>
+                        <span id="card-vat-no" class="font-mono text-[11px] text-slate-300 truncate block mt-0.5">—</span>
+                    </div>
+                    <div class="bg-[#080c14] p-2 rounded border border-[#172033]">
+                        <span class="text-[9px] font-bold tracking-wider text-slate-500 uppercase block">STATUS / TYPE</span>
+                        <span id="card-status-type" class="font-mono text-[11px] text-slate-300 truncate block mt-0.5">—</span>
+                    </div>
+                    <div class="bg-[#080c14] p-2 rounded border border-[#172033]">
+                        <span class="text-[9px] font-bold tracking-wider text-slate-500 uppercase block">WEBSITE ADDRESS</span>
+                        <span id="card-location" class="font-mono text-[11px] text-slate-300 truncate block mt-0.5">—</span>
+                    </div>
+                    <div class="bg-[#080c14] p-2 rounded border border-[#172033]">
+                        <span class="text-[9px] font-bold tracking-wider text-slate-500 uppercase block">CONTACT (EMAIL / TEL)</span>
+                        <span id="card-contact" class="font-mono text-[11px] text-slate-300 truncate block mt-0.5">—</span>
+                    </div>
+                </div>
+
+                <!-- Re-enrich button -->
+                <div class="pt-0.5">
+                    <button id="official-enrich-btn" class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-800 to-teal-800 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs uppercase tracking-wider py-2 px-3 rounded border border-emerald-500/30 shadow-lg shadow-emerald-950/40 transition-all active:scale-95">
+                        <span>🇬🇧</span>
+                        <span id="enrich-btn-text">RE-CHECK UK REGISTRY DATA</span>
+                    </button>
+                    <div id="enrich-status-msg" class="text-[10px] text-center text-slate-500 mt-1 italic">
+                        UK Companies House check runs automatically during crawl
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Section: Dual Intelligence View -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-1">
+
+        <!-- Left Bottom: company_data.json -->
+        <div class="lg:col-span-7 flex flex-col bg-[#0b0f19] border border-[#172033] rounded-lg overflow-hidden">
+            <div class="flex items-center justify-between px-3 py-2 border-b border-[#172033] bg-[#080c14]">
+                <span class="text-[11px] font-mono font-bold text-slate-300">company_data.json</span>
+                <button id="copy-json-btn" class="text-[9px] font-mono font-bold px-2.5 py-0.5 rounded bg-[#151d30] hover:bg-[#1f2b47] text-slate-300 border border-[#22304d] transition-all">
+                    <span id="copy-text">COPY TO CLIPBOARD</span>
+                </button>
+            </div>
+            <pre id="json-viewer" class="p-3 bg-[#05080e] console-font text-slate-300 overflow-auto custom-scroll max-h-[360px] min-h-[220px]">{\n  "status": "idle",\n  "message": "Enter domain and start crawl."\n}</pre>
+        </div>
+
+        <!-- Right Bottom: Official Registry & Wikipedia Intel Output -->
+        <div class="lg:col-span-5 flex flex-col bg-[#0b0f19] border border-[#172033] rounded-lg overflow-hidden">
+            <div class="flex items-center justify-between px-3 py-2 border-b border-[#172033] bg-[#080c14]">
+                <div class="flex items-center gap-2">
+                    <span class="text-cyan-400 text-xs">🏛️</span>
+                    <span class="text-[10px] font-bold text-slate-300 tracking-wider uppercase">OFFICIAL REGISTRY & ENRICHMENT</span>
+                </div>
+                <span id="wiki-match-badge" class="text-[9px] font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
+                    STANDBY
+                </span>
+            </div>
+            <pre id="wiki-enrich-viewer" class="p-3 bg-[#05080e] console-font text-cyan-200/90 overflow-auto custom-scroll max-h-[360px] min-h-[220px]">{\n  "official_registry": null,\n  "wikipedia": null\n}</pre>
+        </div>
+
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        const domainInput = document.getElementById('domain-input');
+        const crawlBtn = document.getElementById('crawl-btn');
+        const consoleLogs = document.getElementById('console-logs');
+        const sseBadge = document.getElementById('sse-badge');
+        const confidenceBadge = document.getElementById('confidence-badge');
+        const systemDot = document.getElementById('system-dot');
+        const systemStatusText = document.getElementById('system-status-text');
+
+        const cardCompanyName = document.getElementById('card-company-name');
+        const cardDesc = document.getElementById('card-desc');
+        const cardLegalName = document.getElementById('card-legal-name');
+        const cardRegNo = document.getElementById('card-reg-no');
+        const cardVatNo = document.getElementById('card-vat-no');
+        const cardStatusType = document.getElementById('card-status-type');
+        const cardLocation = document.getElementById('card-location');
+        const cardContact = document.getElementById('card-contact');
+        const entityAvatar = document.getElementById('entity-avatar');
+
+        const officialEnrichBtn = document.getElementById('official-enrich-btn');
+        const enrichBtnText = document.getElementById('enrich-btn-text');
+        const enrichStatusMsg = document.getElementById('enrich-status-msg');
+
+        const jsonViewer = document.getElementById('json-viewer');
+        const wikiEnrichViewer = document.getElementById('wiki-enrich-viewer');
+        const wikiMatchBadge = document.getElementById('wiki-match-badge');
+
+        const copyJsonBtn = document.getElementById('copy-json-btn');
+        const copyText = document.getElementById('copy-text');
+        const historyList = document.getElementById('history-list');
+        const historyCount = document.getElementById('history-count');
+
+        let eventSource = null;
+        let lastExtractedData = null;
+        let lastWikiData = null;
+        let crawlHistory = JSON.parse(localStorage.getItem('crawl_history') || '[]');
+
+        function updateHistoryUI() {
+            historyCount.innerText = crawlHistory.length;
+            if (crawlHistory.length === 0) {
+                historyList.innerHTML = '<div class="p-3 text-center text-xs text-slate-500">No prior crawls saved yet.</div>';
+                return;
+            }
+
+            historyList.innerHTML = crawlHistory.map((item, idx) => `
+                <div onclick="loadHistoryItem(${idx})" class="p-2.5 rounded bg-[#0e1422] border border-[#1c273e] cursor-pointer hover:border-indigo-500/50 transition-all">
+                    <div class="font-bold text-xs text-slate-100">${item.domain || 'unknown'}</div>
+                    <div class="text-[10px] text-slate-400 mt-0.5">${item.company_name || item.legal_name || '—'}</div>
+                </div>
+            `).join('');
+        }
+
+        function saveToHistory(data) {
+            if (!data || !data.domain) return;
+            const existingIdx = crawlHistory.findIndex(h => h.domain === data.domain);
+            if (existingIdx >= 0) {
+                crawlHistory[existingIdx] = data;
+            } else {
+                crawlHistory.unshift(data);
+                if (crawlHistory.length > 20) crawlHistory.pop();
+            }
+            localStorage.setItem('crawl_history', JSON.stringify(crawlHistory));
+            updateHistoryUI();
+        }
+
+        function loadHistoryItem(idx) {
+            const item = crawlHistory[idx];
+            if (!item) return;
+            lastExtractedData = item;
+            populateEntityCard(item);
+            jsonViewer.innerText = JSON.stringify(item, null, 2);
+            if (item.official_registry_profile) {
+                wikiEnrichViewer.innerText = JSON.stringify(item.official_registry_profile, null, 2);
+            }
+            domainInput.value = item.domain;
+        }
+
+        function getTimestamp() {
+            const d = new Date();
+            return `[${d.toTimeString().split(' ')[0]}]`;
+        }
+
+        function appendLog(tag, msg) {
+            const ts = getTimestamp();
+            let color = 'text-slate-300';
+
+            if (tag === 'PHASE') color = 'text-indigo-400 font-semibold';
+            else if (tag === 'INFO') color = 'text-slate-300';
+            else if (tag === 'SUCCESS') color = 'text-emerald-400 font-semibold';
+            else if (tag === 'WARN') color = 'text-amber-400';
+            else if (tag === 'ERROR') color = 'text-rose-400 font-bold';
+
+            const line = document.createElement('div');
+            line.className = `${color} mb-0.5`;
+            line.innerText = `${ts} ${tag} ${msg}`;
+
+            consoleLogs.appendChild(line);
+            consoleLogs.scrollTop = consoleLogs.scrollHeight;
+        }
+
+        function populateEntityCard(data) {
+            const name = data.company_name || data.legal_name || data.domain || '—';
+            cardCompanyName.innerText = name;
+            entityAvatar.innerText = name !== '—' ? name.charAt(0).toUpperCase() : '—';
+
+            cardDesc.innerText = data.business_description || 'No description extracted.';
+            cardLegalName.innerText = data.legal_name || '—';
+            cardRegNo.innerText = data.registration_number || '—';
+            cardVatNo.innerText = data.vat_tax_number || '—';
+
+            const st = [data.company_status, data.company_type].filter(Boolean).join(' / ');
+            cardStatusType.innerText = st || '—';
+
+            const location = data.full_address || [data.city, data.country].filter(Boolean).join(', ') || '—';
+            cardLocation.innerText = location;
+
+            const contact = [data.email, data.phone].filter(Boolean).join(' | ') || '—';
+            cardContact.innerText = contact;
+
+            if (data.identity_confidence !== undefined && data.identity_confidence !== null) {
+                const pct = Math.round(data.identity_confidence * 100);
+                confidenceBadge.innerText = `${pct}% CONFIDENCE`;
+                if (pct >= 80) {
+                    confidenceBadge.className = "text-[10px] font-bold text-emerald-400 tracking-wider";
+                } else if (pct >= 50) {
+                    confidenceBadge.className = "text-[10px] font-bold text-amber-400 tracking-wider";
+                } else {
+                    confidenceBadge.className = "text-[10px] font-bold text-slate-400 tracking-wider";
+                }
+            } else if (data.identity_match) {
+                confidenceBadge.innerText = '100% CONFIDENCE';
+                confidenceBadge.className = "text-[10px] font-bold text-emerald-400 tracking-wider";
+            } else {
+                confidenceBadge.innerText = '—';
+            }
+
+            if (data.official_registry_profile) {
+                wikiEnrichViewer.innerText = JSON.stringify(data.official_registry_profile, null, 2);
+                wikiMatchBadge.innerText = "VERIFIED REGISTRY";
+                wikiMatchBadge.className = "text-[9px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+            }
+        }
+
+        // Start Crawl
+        crawlBtn.onclick = () => {
+            let domain = domainInput.value.trim();
+            if (!domain) {
+                alert("Please enter a valid domain (e.g. brewdog.com)");
+                return;
+            }
+
+            // Reset
+            consoleLogs.innerText = "";
+            jsonViewer.innerText = "{\n  \"status\": \"crawling...\"\n}";
+            wikiEnrichViewer.innerText = "Waiting for pipeline extraction and registry lookup...";
+            wikiMatchBadge.innerText = "SCANNING";
+            wikiMatchBadge.className = "text-[9px] font-bold px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-400 border border-indigo-500/30";
+
+            sseBadge.innerText = "SSE: STREAMING";
+            sseBadge.className = "text-[10px] font-mono font-bold text-indigo-400 animate-pulse";
+
+            systemDot.className = "w-2 h-2 rounded-full bg-indigo-400 animate-ping";
+            systemStatusText.innerText = "ACTIVE CRAWL";
+            systemStatusText.className = "tracking-wider uppercase text-[10px] text-indigo-400 font-bold";
+
+            crawlBtn.disabled = true;
+            crawlBtn.innerText = "CRAWLING...";
+
+            appendLog('PHASE', `Initiating crawl pipeline for domain: ${domain}`);
+
+            if (eventSource) eventSource.close();
+
+            const maxPages = document.getElementById('max-pages-select')?.value || '10';
+            eventSource = new EventSource(`/crawl?domain=${encodeURIComponent(domain)}&max_pages=${maxPages}`);
+
+            eventSource.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+
+                if (data.type === 'log') {
+                    const level = data.level || 'INFO';
+                    appendLog(level, data.msg);
+                }
+                else if (data.type === 'json') {
+                    lastExtractedData = data.content;
+                    populateEntityCard(lastExtractedData);
+                    jsonViewer.innerText = JSON.stringify(data.content, null, 2);
+                    saveToHistory(lastExtractedData);
+                }
+                else if (data.type === 'wiki_json') {
+                    lastWikiData = data.content;
+                    if (!lastExtractedData?.official_registry_profile) {
+                        wikiEnrichViewer.innerText = JSON.stringify(data.content, null, 2);
+                    }
+                    if (data.content._domain_match) {
+                        wikiMatchBadge.innerText = "WIKI VERIFIED";
+                        wikiMatchBadge.className = "text-[9px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                    }
+                }
+                else if (data.type === 'done') {
+                    sseBadge.innerText = "SSE: COMPLETED";
+                    sseBadge.className = "text-[10px] font-mono font-bold text-emerald-400";
+
+                    systemDot.className = "w-2 h-2 rounded-full bg-emerald-400";
+                    systemStatusText.innerText = "SYSTEM READY";
+                    systemStatusText.className = "tracking-wider uppercase text-[10px] text-emerald-400 font-bold";
+
+                    crawlBtn.disabled = false;
+                    crawlBtn.innerText = "CRAWL DOMAIN";
+
+                    appendLog('SUCCESS', 'All crawl, extraction, and verification stages complete.');
+                    eventSource.close();
+                }
+                else if (data.type === 'error') {
+                    appendLog('ERROR', data.msg);
+                    sseBadge.innerText = "SSE: ERROR";
+                    sseBadge.className = "text-[10px] font-mono font-bold text-rose-400";
+
+                    crawlBtn.disabled = false;
+                    crawlBtn.innerText = "CRAWL DOMAIN";
+                    eventSource.close();
+                }
+            };
+
+            eventSource.onerror = () => {
+                sseBadge.innerText = "SSE: DISCONNECTED";
+                crawlBtn.disabled = false;
+                crawlBtn.innerText = "CRAWL DOMAIN";
+                eventSource.close();
+            };
+        };
+
+        // Official Companies House API Re-Check Button
+        officialEnrichBtn.onclick = async () => {
+            if (!lastExtractedData) {
+                alert("Please crawl a domain first before re-querying official registry records.");
+                return;
+            }
+
+            officialEnrichBtn.disabled = true;
+            enrichBtnText.innerText = "QUERYING UK COMPANIES HOUSE...";
+            enrichStatusMsg.innerText = "Connecting to UK Government Companies House API...";
+
+            const name = lastExtractedData.legal_name || lastExtractedData.company_name;
+            const regNo = lastExtractedData.registration_number;
+            const domain = lastExtractedData.domain;
+            const postcode = lastExtractedData.postal_code || '';
+            const city = lastExtractedData.city || '';
+            const address = lastExtractedData.full_address || '';
+
+            appendLog('PHASE', `Re-checking Companies House: name='${name}', reg_no='${regNo}'`);
+
+            try {
+                const url = `/enrich?name=${encodeURIComponent(name || '')}&reg_no=${encodeURIComponent(regNo || '')}&domain=${encodeURIComponent(domain || '')}&postcode=${encodeURIComponent(postcode)}&city=${encodeURIComponent(city)}&address=${encodeURIComponent(address)}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    appendLog('SUCCESS', `Companies House Match Resolved: ${data.company_number} (${data.legal_name})`);
+                    enrichStatusMsg.innerHTML = `<span class="text-emerald-400 font-semibold">✅ Resolved to Official UK Company ${data.company_number}: ${data.legal_name}</span>`;
+
+                    if (data.normalized) {
+                        wikiEnrichViewer.innerText = JSON.stringify(data.normalized, null, 2);
+                        wikiMatchBadge.innerText = "VERIFIED REGISTRY";
+                        wikiMatchBadge.className = "text-[9px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                    }
+                } else if (data.status === 'ambiguous') {
+                    appendLog('WARN', `Companies House Resolution Ambiguous. Refused to guess.`);
+                    enrichStatusMsg.innerHTML = `<span class="text-amber-400 font-semibold">⚠️ Multiple candidates found (ambiguous). Inspect below.</span>`;
+                    wikiEnrichViewer.innerText = JSON.stringify(data.resolution, null, 2);
+                } else {
+                    appendLog('WARN', `Companies House: ${data.msg || data.status}`);
+                    enrichStatusMsg.innerHTML = `<span class="text-slate-400">${data.msg || 'No matching Companies House record.'}</span>`;
+                }
+            } catch (err) {
+                appendLog('ERROR', `Companies House Lookup Error: ${err.message}`);
+                enrichStatusMsg.innerText = `Error: ${err.message}`;
+            } finally {
+                officialEnrichBtn.disabled = false;
+                enrichBtnText.innerText = "RE-CHECK UK REGISTRY DATA";
+            }
+        };
+
+        // Copy to clipboard button
+        copyJsonBtn.onclick = () => {
+            const text = jsonViewer.innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                copyText.innerText = "COPIED!";
+                setTimeout(() => { copyText.innerText = "COPY TO CLIPBOARD"; }, 2000);
+            });
+        };
+
+        // Initial history load
+        updateHistoryUI();
+    </script>
+</body>
+</html>
